@@ -98,9 +98,9 @@
       `);
       
       const layers = [];
-      var monthstart = [4,3,2,1]
-      var monthper = [1,2,3,4]
-      var dayper = ["01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29"]
+      var monthstart = [4,3]
+      var monthper = [3,4]
+      var dayper = ["01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30"]
       var monthformat = {'1': '01','2': '02','3': '03','4': '04'}
       var pipFormats = {}
       var iter = 0
@@ -155,39 +155,20 @@
          strokeColor: black
          color: ramp($type_`+newdate+`, PRISM)
          `))
+         console.warn(day)
          layers[newdate].addTo(map);
          layers[newdate].on('loaded', () => {
              layers[newdate].hide();
+             hideLoader();
+
            });
          }});
 
-      monthstart.forEach(function(month){
-        dayper.forEach(function(day){
-          newdate = monthformat[month] + day;
-
-          if(typeof layers[newdate] == "undefined"){
-         //console.warn(newdate)
-         layers[newdate] = new carto.Layer('layer'+newdate, source, new carto.Viz(`
-         @country: $iso3
-         @closure_type: $type_`+newdate+`
-         @note:$comment_`+newdate+`
-         width: 4
-         strokeWidth: 0.5
-         strokeColor: black
-         color: ramp($type_`+newdate+`, PRISM)
-         `))
-         layers[newdate].addTo(map,"layer0421");
-         sleep(400);
-         layers[newdate].on('loaded', () => {
-             layers[newdate].hide();
-           });
-         }})});
 
       let colorLegendList = '';
       layers["0421"].on('loaded', () => {
       console.warn(layers)
       layers["0421"].show();
-      hideLoader();
             
       const colorLegend = layers["0421"].viz.color.getLegendData();
       colorLegend.data.forEach((legend, index) => {
@@ -247,7 +228,27 @@
                 popup.remove();
             }
         }
+     monthstart.forEach(function(month){
+        dayper.forEach(function(day){
+          newdate = monthformat[month] + day;
 
+          if(typeof layers[newdate] == "undefined"){
+         //console.warn(newdate)
+         layers[newdate] = new carto.Layer('layer'+newdate, source, new carto.Viz(`
+         @country: $iso3
+         @closure_type: $type_`+newdate+`
+         @note:$comment_`+newdate+`
+         width: 4
+         strokeWidth: 0.5
+         strokeColor: black
+         color: ramp($type_`+newdate+`, PRISM)
+         `))
+         layers[newdate].addTo(map,"layer0421");
+         sleep(300);
+         layers[newdate].on('loaded', () => {
+             layers[newdate].hide();
+           });
+         }})});
         slider.on('update', function(values,handle){
                 //dateValues[handle].innerHTML = formatDate(new Date(+values[handle]));
                 monthper.forEach(function(month){
