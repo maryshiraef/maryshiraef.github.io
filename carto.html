@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+  <html>
+    <head>
+      <title>CARTO VL Example</title>
+      <link href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/8.2.1/nouislider.min.css" rel="stylesheet">
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/8.2.1/nouislider.min.js" charset="utf-8"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js" charset="utf-8"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+      <!-- Load CARTO VL JS -->
+      <script src="https://libs.cartocdn.com/carto-vl/v1.4.4/carto-vl.js"></script>
+      <!-- Load Mapbox GL -->
+      <script src="https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.js"></script>
+      <link href="https://api.tiles.mapbox.com/mapbox-gl-js/v0.52.0/mapbox-gl.css" rel="stylesheet"/>
+      <!-- Load CARTO VL Styles -->
+      <link href="https://carto.com/developers/carto-vl/examples/maps/style.css" rel="stylesheet"/>
+      <style>
+        #map {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+        }
+        .slider {
+            margin: 20px 20px 100px 20px;
+            width:50%;
+            margin-left: auto;
+            margin-right: auto;}
+        .mapboxgl-popup-content {
+            min-width: 700px;
+            max-width: 700px;
+
+        }
+        body {
+            background-color:#222222;
+
+            font-family: Helvetica, Arial, sans-serif;
+        }
+
+      </style>
+    </head>
+    <body>
+      <div class="slider">
+    </div>
+      <div id="map"></div>
+      <aside class="toolbox">
+      <div class="box">
+        <header>
+          <h1>Closure type</h1>
+        </header>
+        <section>
+          <div id="controls">
+            <p id="content-title"></p>
+            <ul id="content"></ul>
+          </div>
+        </section>
+        <footer class="js-footer"></footer>
+      </div>
+    </aside>
+      <div id="loader">
+    <div class="CDB-LoaderIcon CDB-LoaderIcon--big">
+      <svg class="CDB-LoaderIcon-spinner" viewBox="0 0 50 50">
+        <circle class="CDB-LoaderIcon-path" cx="25" cy="25" r="20" fill="none"></circle>
+      </svg>
+    </div>
+  </div>
+    
+
+    </body>
+    <script>
+      const map = new mapboxgl.Map({
+        container: 'map',
+        style: carto.basemaps.darkmatter ,
+        center: [0, 30],
+        zoom: 2
+      })
+      //map.addControl(nav, 'top-left');
+      //map.addControl(new mapboxgl.FullscreenControl(), 'top-left');
+      carto.setDefaultAuth({
+        username: 'maryshiraef',
+        apiKey: 'default_public'
+      })
+        
+        const nav = new mapboxgl.NavigationControl({
+            showCompass: false
+        });
+        map.addControl(nav, 'top-left');
+        map.addControl(new mapboxgl.FullscreenControl(), 'top-left');
+
+       const popup = new mapboxgl.Popup({
+            closeButton: false,
+            closeOnClick: false
+        });
+
+      const source = new carto.source.SQL(`
+        SELECT * FROM migrationtrackermap_data_v1_jf_1
+      `);
+      
+      const layers = [];
+      var monthper = [0,1,2,3]
+      var pipFormats = {'0':'january','1':'february','2':'march','3':'april'};
+
+      monthper.forEach(function(date){
+         newdate = pipFormats[date];
+         console.warn(newdate)
+         layers.push(new carto.Layer('layer'+date, source, new carto.Viz(`
+         @country: $country
+         @closure_type: $closure_type
+         @note:$comments_acaps
+         @closure_startdate:$closure_startdate
+         width: 4
+         strokeWidth: 0.5
+         strokeColor: black
+         color: ramp($`+newdate+`, PRISM)
+         `)))
+         layers[date].addTo(map);
+         layers[date].on('loaded', () => {
+             layers[date].hide();
+           });
+         });
+      let colorLegendList = '';
+      console.warn(layers)
+
+      layers[3].on('loaded', () => {
+        layers[3].show();
+        hideLoader();
+
+        const colorLegend = layers[3].viz.color.getLegendData();
+        colorLegend.data.forEach((legend, index) => {
+        const color = rgbToHex(legend.value);
+                    // Style for legend items based on geometry type
+        colorLegendList +=`<li><span class="point-mark" style="background-color:${color}; border: 1px solid black;"></span><span>${legend.key}</span></li>\n`; });
+        document.getElementById('content').innerHTML = colorLegendList;
+  
+      });
+
+      const interactivity = new carto.Interactivity(layers[3]);
+      interactivity.on('featureClick', updatePopup);
+      function rgbToHex(color) {
+        return "#" + ((1 << 24) + (color.r << 16) + (color.g << 8) + color.b).toString(16).slice(1);
+      }
+
+        function updatePopup(event) {
+            if (event.features.length > 0) {
+                const vars = event.features[0].variables;
+                popup.setHTML(`
+                <div class="CDB-infowindow CDB-infowindow--light js-infowindow">
+                    <div class="CDB-infowindow-close js-close"></div>
+                      <div class="CDB-infowindow-container">
+                <div class="CDB-infowindow-header CDB-infowindow-headerBg CDB-infowindow-headerBg--light js-header" style="background: #35AAE5;">
+                  
+                  <ul class="CDB-infowindow-list">
+                    <li class="CDB-infowindow-listItem">
+                      <h5 class="CDB-infowindow-subtitle">Country</h5>
+                      <h4 class="CDB-infowindow-title ">
+                        ${vars.country.value}
+                      </h4>
+                    </li>
+                  </ul>
+                </div>
+                <div class="CDB-infowindow-inner js-inner">
+                  <ul class="CDB-infowindow-list js-content">
+                    <li class="CDB-infowindow-listItem">
+                      <h5 class="CDB-infowindow-subtitle">Closure Type</h5>
+                      <h4 class="CDB-infowindow-title">${vars.closure_type.value}</h4>
+                    </li>
+                    <li class="CDB-infowindow-listItem">
+                      <h5 class="CDB-infowindow-subtitle">Closure Start Date</h5>
+                      <h4 class="CDB-infowindow-title">${vars.closure_startdate.value}</h4>
+                    </li>
+                    <li class="CDB-infowindow-listItem">
+                      <h5 class="CDB-infowindow-subtitle">Notes:</h5>
+                      <h4 class="CDB-infowindow-title">${vars.note.value}</h4>
+                    </li>
+                  </ul>
+                </div>
+                <div class="CDB-hook">
+                  <div class="CDB-hook-inner"></div>
+                </div>
+                    </div>
+                </div>
+                `);
+                popup.setLngLat([event.coordinates.lng, event.coordinates.lat]);
+                if (!popup.isOpen()) {
+                    popup.addTo(map);
+                }
+            } else {
+                popup.remove();
+            }
+        }
+
+
+        slider = noUiSlider.create($(".slider")[0], {
+                //start: [timestamp('2020','01','01'), Date.now()],
+                start: 4,
+                step: 1,
+                snap:true,
+                //connect: true,
+                orientation: 'horizontal',
+                //tooltips: [false,wNumb({encoder:function(a){return formatDate(new Date(a));}})],
+                range: {
+                    //min: timestamp('2020','01','01'),
+                    'min':0,
+                    '33%':1,
+                    '66%':2,
+                    'max':3
+                     //max: Date.now()
+                },
+                pips: {
+                    mode: 'steps',
+                    density: 1,
+                    format: {to: function(a){return pipFormats[a];}}
+                    //values:   [1,2,3,4]//["Jan 2020", "Feb 2020", "Mar 2020", "Apr 2020"]  
+                }
+            });
+
+
+            var dateValues = [
+                document.getElementById('event-start'),
+                document.getElementById('event-end')
+            ];
+
+            //layer.hide()
+            //range slider update function
+            slider.on('update', function(values,handle){
+                //dateValues[handle].innerHTML = formatDate(new Date(+values[handle]));
+                monthper.forEach(function(date){
+                  layers[date].hide()
+                  });
+                layers[parseInt(values[0])].show();  //causes warning
+                /*const colorLegend = layers[parseInt(values[0])].viz.color.getLegendData();
+                  colorLegend.data.forEach((legend, index) => {
+                const color = rgbToHex(legend.value);
+                    // Style for legend items based on geometry type
+                colorLegendList +=`<li><span class="point-mark" style="background-color:${color}; border: 1px solid black;"></span><span>${legend.key}</span></li>\n`; });
+                document.getElementById('content').innerHTML = colorLegendList;*/
+                //viz.blendTo ( viznew , 500 )
+                //viz.variables['val'].blendTo("$"+newdate);
+                //viz.variables['val'] = "$"+newdate
+                //update text on screen
+                //$(".values").text("Show area with a population between " + parseInt(values[0]) + " and " + parseInt(values[1]) + " inhabitants");
+            });
+            layers[3].on('loaded', () => {
+            $(slider).trigger("set"); });
+
+    function hideLoader() {
+      document.getElementById('loader').style.opacity = '0';
+    }
+    </script>
+  </html>
