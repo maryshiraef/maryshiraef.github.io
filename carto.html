@@ -106,15 +106,17 @@
       var iter = 0
       monthper.forEach(function(month){
         dayper.forEach(function(day){
+          if(parseInt(month)==3 || (parseInt(month)==4 & parseInt(day)<15)){
          newdate = monthformat[month] + day;
          pipFormats[iter] = newdate;
          iter++;
+       }
        })});
       iter=iter-1
       //var pipFormats = {'0':'0201','1':'0202','2':'0203','3':'0229','4':'0301','5':'0302','6':'0303','7':'0329'};
         slider = noUiSlider.create($(".slider")[0], {
                 //start: [timestamp('2020','01','01'), Date.now()],
-                start: iter,
+                start: 43,
                 step: 1,
                 snap:false,
                 //connect: true,
@@ -123,15 +125,15 @@
                 range: {
                     //min: timestamp('2020','01','01'),
                     'min':[0],
-                    'max':iter
+                    'max':43
                      //max: Date.now()
                 },
-                tooltips: [{to: function(a){return pipFormats[a];}}],
+                tooltips: [{to: function(a){return pipFormats[parseInt(a)];}}],
                 pips: {
-        mode: 'count',
-        values: 6,
-        density: 4,
-                    format: {to: function(a){return pipFormats[a];}}
+                mode: 'count',
+                values: 6,
+                density: 5,
+                format: {to: function(a){return pipFormats[parseInt(a)];}}
                     //values:   [1,2,3,4]//["Jan 2020", "Feb 2020", "Mar 2020", "Apr 2020"]  
                 }
             });
@@ -143,7 +145,6 @@
             ];
 
         dayper.forEach(function(day){
-          if(parseInt(day)>20){
          newdate = "04" + day;
          //console.warn(newdate)
          layers[newdate] = new carto.Layer('layer'+newdate, source, new carto.Viz(`
@@ -153,24 +154,25 @@
          width: 4
          strokeWidth: 0.5
          strokeColor: black
-         color: ramp($type_`+newdate+`, PRISM)
+         color: ramp(buckets($type_`+newdate+`, ["Border closure", "International flights suspension", "No Policy","Visa restrictions"]),[#5F4690, #1D6996, #38A6A5, #666666,#0F8554])
          `))
          console.warn(day)
+         //#5F4690,#1D6996,#38A6A5,#0F8554,#73AF48,#EDAD08,#E17C05,#CC503E,#94346E,#6F4070,#994E95,#666666
          layers[newdate].addTo(map);
          layers[newdate].on('loaded', () => {
              layers[newdate].hide();
              hideLoader();
 
            });
-         }});
+         });
 
 
       let colorLegendList = '';
-      layers["0421"].on('loaded', () => {
+      layers["0414"].on('loaded', () => {
       console.warn(layers)
-      layers["0421"].show();
+      layers["0414"].show();
             
-      const colorLegend = layers["0421"].viz.color.getLegendData();
+      const colorLegend = layers["0414"].viz.color.getLegendData();
       colorLegend.data.forEach((legend, index) => {
       const color = rgbToHex(legend.value);
                   // Style for legend items based on geometry type
@@ -178,7 +180,7 @@
       document.getElementById('content').innerHTML = colorLegendList;
       });
 
-      const interactivity = new carto.Interactivity(layers["0421"]);
+      const interactivity = new carto.Interactivity(layers["0414"]);
       interactivity.on('featureClick', updatePopup);
       function rgbToHex(color) {
         return "#" + ((1 << 24) + (color.r << 16) + (color.g << 8) + color.b).toString(16).slice(1);
@@ -241,10 +243,9 @@
          width: 4
          strokeWidth: 0.5
          strokeColor: black
-         color: ramp($type_`+newdate+`, PRISM)
-         `))
-         layers[newdate].addTo(map,"layer0421");
-         sleep(300);
+         color: ramp(buckets($type_`+newdate+`, ["Border closure", "International flights suspension", "No Policy","Visa restrictions"]),[#5F4690, #1D6996, #38A6A5, #666666,#0F8554])         `))
+         layers[newdate].addTo(map,"layer0414");
+         sleep(200);
          layers[newdate].on('loaded', () => {
              layers[newdate].hide();
            });
@@ -267,8 +268,8 @@
                     width: 4
                     strokeWidth: 0.5
                     strokeColor: black
-                    color: ramp($type_`+showdate+`, PRISM)
-                    `))
+         color: ramp(buckets($type_`+newdate+`, ["Border closure", "International flights suspension", "No Policy","Visa restrictions"]),[#5F4690, #1D6996, #38A6A5, #666666,#0F8554])
+                             `))
                     console.warn("creage"+showdate)
                     layers[showdate].addTo(map);
                     layers[showdate].on('loaded', () => {
