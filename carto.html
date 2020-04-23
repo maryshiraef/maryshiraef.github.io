@@ -2,8 +2,8 @@
   <html>
     <head>
       <title>Policy Map</title>
-      <link href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/8.2.1/nouislider.min.css" rel="stylesheet">
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/8.2.1/nouislider.min.js" charset="utf-8"></script>
+      <link href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.0.3/nouislider.min.css" rel="stylesheet">
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.0.3/nouislider.min.js" charset="utf-8"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js" charset="utf-8"></script>
       <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
       <!-- Load CARTO VL JS -->
@@ -32,7 +32,7 @@
         .noUi-horizontal .noUi-handle-lower .noUi-tooltip {
            top: 40px;
            width:80px;
-
+           height: 30px;
         }
         .noUi-value {
           width:60px;
@@ -149,54 +149,48 @@
         @source : $source_0429`
         monthper.forEach(function(month){
           dayper.forEach(function(day){
-          hidedate = monthformat[month] + day;
+            hidedate = monthformat[month] + day;
             stringViz = stringViz + `
-            @closure_type${hidedate} : $type_${hidedate}
-            @note${hidedate}:$comment_${hidedate}
-            @source${hidedate}:$source_${hidedate} 
-        `
-                  });});
-       stringViz = stringViz + `
-        color: ramp(buckets(@closure_type0423, ["Border closure", "International flights suspension", "No Policy","Visa restrictions"]),[#5F4690, #1D6996, #38A6A5, #666666,#0F8554])
+              @closure_type${hidedate} : $type_${hidedate}
+              @note${hidedate}:$comment_${hidedate}
+              @source${hidedate}:$source_${hidedate} 
+              `
+          });
+        });
+      stringViz = stringViz + `
+        color: ramp(buckets(@closure_type, ["Border closure", "International flights suspension", "No Policy","Visa restrictions"]),[#5F4690, #1D6996, #38A6A5, #666666,#0F8554])
         strokeColor: rgba(0,0,0,0.2)
         strokeWidth: 1
       `
       const viz = new carto.Viz(stringViz);
-
       const layer = new carto.Layer('layer', source, viz)
-         //#5F4690,#1D6996,#38A6A5,#0F8554,#73AF48,#EDAD08,#E17C05,#CC503E,#94346E,#6F4070,#994E95,#666666
-         layer.addTo(map);
-         const interactivity =new carto.Interactivity(layer);
-         interactivity.on('featureClick', updatePopup); 
-         layer.on('loaded', () => {
-
-
-      let colorLegendList = '';
-      hideLoader();
-            
-      const colorLegend = layer.viz.color.getLegendData();
-      colorLegend.data.forEach((legend, index) => {
-      const color = rgbToHex(legend.value);
-                  // Style for legend items based on geometry type
-      colorLegendList +=`<li><span class="point-mark" style="background-color:${color}; border: 1px solid black;"></span><span>${legend.key}</span></li>\n`; });
-      document.getElementById('content').innerHTML = colorLegendList;
-    
-   
+      //#5F4690,#1D6996,#38A6A5,#0F8554,#73AF48,#EDAD08,#E17C05,#CC503E,#94346E,#6F4070,#994E95,#666666
+      layer.addTo(map);
+      const interactivity =new carto.Interactivity(layer);
+      interactivity.on('featureClick', updatePopup); 
+      layer.on('loaded', () => {
+        let colorLegendList = '';
+        hideLoader();        
+        const colorLegend = layer.viz.color.getLegendData();
+        colorLegend.data.forEach((legend, index) => {
+        const color = rgbToHex(legend.value);
+        // Style for legend items based on geometry type
+        colorLegendList +=`<li><span class="point-mark" style="background-color:${color}; border: 1px solid black;"></span><span>${legend.key}</span></li>\n`; });
+        document.getElementById('content').innerHTML = colorLegendList;
       });
 
       function rgbToHex(color) {
         return "#" + ((1 << 24) + (color.r << 16) + (color.g << 8) + color.b).toString(16).slice(1);
       }
 
-        function updatePopup(event) {
-            if (event.features.length > 0) {
-                const vars = event.features[0].variables;
-                popup.setHTML(`
-                <div class="CDB-infowindow CDB-infowindow--light js-infowindow">
-                    <div class="CDB-infowindow-close js-close"></div>
-                      <div class="CDB-infowindow-container">
-                <div class="CDB-infowindow-header CDB-infowindow-headerBg CDB-infowindow-headerBg--light js-header" style="background: #35AAE5;">
-                  
+      function updatePopup(event) {
+        if (event.features.length > 0) {
+          const vars = event.features[0].variables;
+          popup.setHTML(`
+            <div class="CDB-infowindow CDB-infowindow--dark js-infowindow">
+              <div class="CDB-infowindow-close js-close"></div>
+              <div class="CDB-infowindow-container">
+                <div class="CDB-infowindow-header CDB-infowindow-headerBg CDB-infowindow-headerBg--light js-header" style="background: #35AAE5;">      
                   <ul class="CDB-infowindow-list">
                     <li class="CDB-infowindow-listItem">
                       <h5 class="CDB-infowindow-subtitle">Country</h5>
@@ -223,27 +217,46 @@
                   </ul>
                 </div>
                 <div class="CDB-hook">
-                  <div class="CDB-hook-inner"></div>
+                <div class="CDB-hook-inner"></div>
                 </div>
-                    </div>
-                </div>
-                `);
-                popup.setLngLat([event.coordinates.lng, event.coordinates.lat]);
-                if (!popup.isOpen()) {
-                    popup.addTo(map);
-                }
-            } else {
-                popup.remove();
+              </div>
+            </div>
+          `);
+          popup.setLngLat([event.coordinates.lng, event.coordinates.lat]);
+            if (!popup.isOpen()) {
+              popup.addTo(map);
             }
-        }
-        //range slider update function
-        slider.on('update', function(values,handle){
-          showdate = pipFormats[parseInt(values[0])]
-          popup.remove();
-          viz.variables['closure_type'] = viz.variables['closure_type'+pipFormats[parseInt(values[0])]]
-          viz.variables['source']       = viz.variables['source'+pipFormats[parseInt(values[0])]]
-          viz.variables['note']         = viz.variables['note'+pipFormats[parseInt(values[0])]]
-          viz.color.blendTo('ramp(buckets(@closure_type'+pipFormats[parseInt(values[0])]+', ["Border closure", "International flights suspension", "No Policy","Visa restrictions"]),[#5F4690, #1D6996, #38A6A5, #666666,#0F8554])',10);
+        } else {
+            popup.remove();
+          }
+      }
+      //range slider update function
+
+      function debounce (func, wait, immediate) {
+        var timeout;
+        return function() {
+          var context = this, args = arguments;
+          var later = function() {
+            timeout = null;
+            if (!immediate) func.apply(context, args);
+          };
+          var callNow = immediate && !timeout;
+          clearTimeout(timeout);
+          timeout = setTimeout(later, wait);
+          if (callNow) func.apply(context, args);
+        };
+      }
+
+      slider.on('update', debounce(onSlide, 10)); 
+
+      //slider.on('update', function(values,handle){
+      function onSlide (values,handle) {
+      showdate = pipFormats[parseInt(values[0])]
+      popup.remove();
+      viz.variables['closure_type'] = viz.variables['closure_type'+pipFormats[parseInt(values[0])]]
+      viz.variables['source']       = viz.variables['source'+pipFormats[parseInt(values[0])]]
+      viz.variables['note']         = viz.variables['note'+pipFormats[parseInt(values[0])]]
+          //viz.color.blendTo('ramp(buckets(@closure_type'+pipFormats[parseInt(values[0])]+', ["Border closure", "International flights suspension", "No Policy","Visa restrictions"]),[#5F4690, #1D6996, #38A6A5, #666666,#0F8554])');
                 /*const colorLegend = layers[parseInt(values[0])].viz.color.getLegendData();
                   colorLegend.data.forEach((legend, index) => {
                 const color = rgbToHex(legend.value);
@@ -255,9 +268,12 @@
                 //viz.variables['val'] = "$"+newdate
                 //update text on screen
                 //$(".values").text("Show area with a population between " + parseInt(values[0]) + " and " + parseInt(values[1]) + " inhabitants");
-        });
-        $(slider).trigger("set"); 
-            
+        };
+        //$(slider).trigger("set"); 
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }     
     function hideLoader() {
       document.getElementById('loader').style.opacity = '0';
     }
