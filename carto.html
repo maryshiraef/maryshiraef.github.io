@@ -144,8 +144,23 @@
                 document.getElementById('event-end')
             ];
 
+      layers["0414"] = new carto.Layer('layer0414', source, new carto.Viz(`
+         @country: $iso3
+         @closure_type: $type_0414
+         @note:$comment_0414
+         width: 4
+         strokeWidth: 0.5
+         strokeColor: black
+         color: ramp(buckets($type_0414, ["Border closure", "International flights suspension", "No Policy","Visa restrictions"]),[#5F4690, #1D6996, #38A6A5, #666666,#0F8554])
+         `))
+         //#5F4690,#1D6996,#38A6A5,#0F8554,#73AF48,#EDAD08,#E17C05,#CC503E,#94346E,#6F4070,#994E95,#666666
+         layers["0414"].addTo(map);
+         layers["0414"].on('loaded', () => {
+         //layers[newdate].hide();
+
         dayper.forEach(function(day){
          newdate = "04" + day;
+         if(parseInt(day)<14){
          //console.warn(newdate)
          layers[newdate] = new carto.Layer('layer'+newdate, source, new carto.Viz(`
          @country: $iso3
@@ -159,18 +174,14 @@
          console.warn(day)
          //#5F4690,#1D6996,#38A6A5,#0F8554,#73AF48,#EDAD08,#E17C05,#CC503E,#94346E,#6F4070,#994E95,#666666
          layers[newdate].addTo(map);
-         layers[newdate].on('loaded', () => {
-             layers[newdate].hide();
-             hideLoader();
 
-           });
-         });
+         }});
 
 
       let colorLegendList = '';
-      layers["0414"].on('loaded', () => {
       console.warn(layers)
-      layers["0414"].show();
+      //layers["0414"].show();
+             hideLoader();
             
       const colorLegend = layers["0414"].viz.color.getLegendData();
       colorLegend.data.forEach((legend, index) => {
@@ -178,10 +189,31 @@
                   // Style for legend items based on geometry type
       colorLegendList +=`<li><span class="point-mark" style="background-color:${color}; border: 1px solid black;"></span><span>${legend.key}</span></li>\n`; });
       document.getElementById('content').innerHTML = colorLegendList;
+     const interactivity = new carto.Interactivity(layers["0414"]);
+      interactivity.on('featureClick', updatePopup); 
+     monthstart.forEach(function(month){
+        dayper.reverse().forEach(function(day){
+          newdate = monthformat[month] + day;
+
+        if(typeof layers[newdate] == "undefined"){
+         //console.warn(newdate)
+         layers[newdate] = new carto.Layer('layer'+newdate, source, new carto.Viz(`
+         @country: $iso3
+         @closure_type: $type_`+newdate+`
+         @note:$comment_`+newdate+`
+         width: 4
+         strokeWidth: 0.5
+         strokeColor: black
+         color: ramp(buckets($type_`+newdate+`, ["Border closure", "International flights suspension", "No Policy","Visa restrictions"]),[#5F4690, #1D6996, #38A6A5, #666666,#0F8554])         `))
+         layers[newdate].addTo(map,"layer0414");
+         sleep(300);
+         layers[newdate].on('loaded', () => {
+             layers[newdate].hide();
+           });
+         }})});
       });
 
-      const interactivity = new carto.Interactivity(layers["0414"]);
-      interactivity.on('featureClick', updatePopup);
+      
       function rgbToHex(color) {
         return "#" + ((1 << 24) + (color.r << 16) + (color.g << 8) + color.b).toString(16).slice(1);
       }
@@ -230,26 +262,7 @@
                 popup.remove();
             }
         }
-     monthstart.forEach(function(month){
-        dayper.forEach(function(day){
-          newdate = monthformat[month] + day;
 
-          if(typeof layers[newdate] == "undefined"){
-         //console.warn(newdate)
-         layers[newdate] = new carto.Layer('layer'+newdate, source, new carto.Viz(`
-         @country: $iso3
-         @closure_type: $type_`+newdate+`
-         @note:$comment_`+newdate+`
-         width: 4
-         strokeWidth: 0.5
-         strokeColor: black
-         color: ramp(buckets($type_`+newdate+`, ["Border closure", "International flights suspension", "No Policy","Visa restrictions"]),[#5F4690, #1D6996, #38A6A5, #666666,#0F8554])         `))
-         layers[newdate].addTo(map,"layer0414");
-         sleep(200);
-         layers[newdate].on('loaded', () => {
-             layers[newdate].hide();
-           });
-         }})});
         slider.on('update', function(values,handle){
                 //dateValues[handle].innerHTML = formatDate(new Date(+values[handle]));
                 monthper.forEach(function(month){
