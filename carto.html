@@ -98,25 +98,34 @@
       `);
       
       const layers = [];
-      var monthstart = [4,3]
-      var monthper = [3,4]
-      var dayper = ["01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30"]
+      const interactivity = [];
+      var monthstart = [4,3,2,1]
+      var monthper = [1,2,3,4]
+      //var dayper = ["01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30"]
+      var dayper = ["01","08","15","23"]
       var monthformat = {'1': '01','2': '02','3': '03','4': '04'}
+      var monthdisplay = {'1': 'Week of Jan ','2': 'Week of Feb ','3': 'Week of Mar ','4': 'Week of Apr '}
       var pipFormats = {}
       var iter = 0
       monthper.forEach(function(month){
         dayper.forEach(function(day){
-          if(parseInt(month)==3 || (parseInt(month)==4 & parseInt(day)<15)){
          newdate = monthformat[month] + day;
          pipFormats[iter] = newdate;
          iter++;
-       }
+       })});
+      var pipdisplay = {}
+      iter=0
+      monthper.forEach(function(month){
+        dayper.forEach(function(day){
+         newdate = monthdisplay[month] + day;
+         pipdisplay[iter] = newdate;
+         iter++
        })});
       iter=iter-1
       //var pipFormats = {'0':'0201','1':'0202','2':'0203','3':'0229','4':'0301','5':'0302','6':'0303','7':'0329'};
         slider = noUiSlider.create($(".slider")[0], {
                 //start: [timestamp('2020','01','01'), Date.now()],
-                start: 43,
+                start: iter,
                 step: 1,
                 snap:false,
                 //connect: true,
@@ -125,15 +134,15 @@
                 range: {
                     //min: timestamp('2020','01','01'),
                     'min':[0],
-                    'max':43
+                    'max':iter
                      //max: Date.now()
                 },
-                tooltips: [{to: function(a){return pipFormats[parseInt(a)];}}],
+                tooltips: [{to: function(a){return pipdisplay[parseInt(a)];}}],
                 pips: {
                 mode: 'count',
-                values: 6,
+                values: 16,
                 density: 5,
-                format: {to: function(a){return pipFormats[parseInt(a)];}}
+                format: {to: function(a){return pipdisplay[parseInt(a)];}}
                     //values:   [1,2,3,4]//["Jan 2020", "Feb 2020", "Mar 2020", "Apr 2020"]  
                 }
             });
@@ -143,20 +152,23 @@
                 document.getElementById('event-start'),
                 document.getElementById('event-end')
             ];
-
-      layers["0414"] = new carto.Layer('layer0414', source, new carto.Viz(`
+     
+      layers["0423"] = new carto.Layer('layer0423', source, new carto.Viz(`
          @country: $iso3
-         @closure_type: $type_0414
-         @note:$comment_0414
+         @closure_type: $type_0423
+         @note:$comment_0423
          width: 4
          strokeWidth: 0.5
          strokeColor: black
-         color: ramp(buckets($type_0414, ["Border closure", "International flights suspension", "No Policy","Visa restrictions"]),[#5F4690, #1D6996, #38A6A5, #666666,#0F8554])
+         color: ramp(buckets($type_0423, ["Border closure", "International flights suspension", "No Policy","Visa restrictions"]),[#5F4690, #1D6996, #38A6A5, #666666,#0F8554])
          `))
          //#5F4690,#1D6996,#38A6A5,#0F8554,#73AF48,#EDAD08,#E17C05,#CC503E,#94346E,#6F4070,#994E95,#666666
-         layers["0414"].addTo(map);
-         layers["0414"].on('loaded', () => {
+         layers["0423"].addTo(map);
+         interactivity["0423"] =new carto.Interactivity(layers["0423"]);
+         interactivity["0423"].on('featureClick', updatePopup); 
+         layers["0423"].on('loaded', () => {
          //layers[newdate].hide();
+
 
         dayper.forEach(function(day){
          newdate = "04" + day;
@@ -171,26 +183,26 @@
          strokeColor: black
          color: ramp(buckets($type_`+newdate+`, ["Border closure", "International flights suspension", "No Policy","Visa restrictions"]),[#5F4690, #1D6996, #38A6A5, #666666,#0F8554])
          `))
-         console.warn(day)
          //#5F4690,#1D6996,#38A6A5,#0F8554,#73AF48,#EDAD08,#E17C05,#CC503E,#94346E,#6F4070,#994E95,#666666
          layers[newdate].addTo(map);
+         interactivity[newdate] = (new carto.Interactivity(layers[newdate]));
+
 
          }});
 
 
       let colorLegendList = '';
-      console.warn(layers)
-      //layers["0414"].show();
+      //console.warn(layers)
+      //layers["0423"].show();
              hideLoader();
             
-      const colorLegend = layers["0414"].viz.color.getLegendData();
+      const colorLegend = layers["0423"].viz.color.getLegendData();
       colorLegend.data.forEach((legend, index) => {
       const color = rgbToHex(legend.value);
                   // Style for legend items based on geometry type
       colorLegendList +=`<li><span class="point-mark" style="background-color:${color}; border: 1px solid black;"></span><span>${legend.key}</span></li>\n`; });
       document.getElementById('content').innerHTML = colorLegendList;
-     const interactivity = new carto.Interactivity(layers["0414"]);
-      interactivity.on('featureClick', updatePopup); 
+    
      monthstart.forEach(function(month){
         dayper.reverse().forEach(function(day){
           newdate = monthformat[month] + day;
@@ -205,7 +217,8 @@
          strokeWidth: 0.5
          strokeColor: black
          color: ramp(buckets($type_`+newdate+`, ["Border closure", "International flights suspension", "No Policy","Visa restrictions"]),[#5F4690, #1D6996, #38A6A5, #666666,#0F8554])         `))
-         layers[newdate].addTo(map,"layer0414");
+         layers[newdate].addTo(map,"layer0423");
+         interactivity[newdate] = (new carto.Interactivity(layers[newdate]));
          sleep(300);
          layers[newdate].on('loaded', () => {
              layers[newdate].hide();
@@ -262,6 +275,7 @@
                 popup.remove();
             }
         }
+            console.warn(interactivity)
 
         slider.on('update', function(values,handle){
                 //dateValues[handle].innerHTML = formatDate(new Date(+values[handle]));
@@ -283,7 +297,6 @@
                     strokeColor: black
          color: ramp(buckets($type_`+newdate+`, ["Border closure", "International flights suspension", "No Policy","Visa restrictions"]),[#5F4690, #1D6996, #38A6A5, #666666,#0F8554])
                              `))
-                    console.warn("creage"+showdate)
                     layers[showdate].addTo(map);
                     layers[showdate].on('loaded', () => {
                         layers[showdate].show();
@@ -292,6 +305,8 @@
                 //console.warn(showdate)
                 else{
                 layers[showdate].show();
+                interactivity[showdate].on('featureClick', updatePopup); 
+
                 }  
                 /*const colorLegend = layers[parseInt(values[0])].viz.color.getLegendData();
                   colorLegend.data.forEach((legend, index) => {
@@ -306,7 +321,6 @@
                 //$(".values").text("Show area with a population between " + parseInt(values[0]) + " and " + parseInt(values[1]) + " inhabitants");
             });
             $(slider).trigger("set"); 
-
             //layer.hide()
             //range slider update function
             
