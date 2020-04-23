@@ -284,6 +284,8 @@
                       hidedate = monthformat[month] + day;
                        if(typeof layers[hidedate] != "undefined"){
                         layers[hidedate].hide()
+                        interactivity[hidedate].disable; 
+
                        }
                   });});
                 showdate = pipFormats[parseInt(values[0])]
