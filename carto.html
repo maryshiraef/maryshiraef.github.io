@@ -106,8 +106,8 @@
       const interactivity = [];
       var monthstart = [4,3,2,1]
       var monthper = [1,2,3,4]
-      //var dayper = ["01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30"]
-      var dayper = ["01","08","15","23"]
+      var dayper = ["01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29"]
+      //var dayper = ["01","08","15","23"]
       var monthformat = {'1': '01','2': '02','3': '03','4': '04'}
       var monthdisplay = {'1': 'Week of Jan ','2': 'Week of Feb ','3': 'Week of Mar ','4': 'Week of Apr '}
       var pipFormats = {}
@@ -157,16 +157,42 @@
                 document.getElementById('event-start'),
                 document.getElementById('event-end')
             ];
-     
-      layers["0423"] = new carto.Layer('layer0423', source, new carto.Viz(`
+
+      let initialSettings = {
+      date: '0423',
+
+      }
+
+
+      let stringViz = `@country: $iso3`
+        monthper.forEach(function(month){
+          dayper.forEach(function(day){
+          hidedate = monthformat[month] + day;
+            stringViz = stringViz + `
+            @closure_type${hidedate} : $type_${hidedate}
+            @note${hidedate}:$comment_${hidedate}
+            @source${hidedate}:$source_${hidedate} 
+        `
+                  });});
+       stringViz = stringViz + `
+        color: ramp(buckets(@closure_type0423, ["Border closure", "International flights suspension", "No Policy","Visa restrictions"]),[#5F4690, #1D6996, #38A6A5, #666666,#0F8554])
+        strokeColor: rgba(0,0,0,0.2)
+        strokeWidth: 1
+      `
+      const viz = new carto.Viz(stringViz);
+/*
+      const viz = new carto.Viz(`
          @country: $iso3
          @closure_type: $type_0423
          @note:$comment_0423
+         @source:$source_0423
+
          width: 4
          strokeWidth: 0.5
          strokeColor: black
-         color: ramp(buckets($type_0423, ["Border closure", "International flights suspension", "No Policy","Visa restrictions"]),[#5F4690, #1D6996, #38A6A5, #666666,#0F8554])
-         `))
+         color: ramp(buckets(@closure_type, ["Border closure", "International flights suspension", "No Policy","Visa restrictions"]),[#5F4690, #1D6996, #38A6A5, #666666,#0F8554])
+         `)*/
+      layers["0423"] = new carto.Layer('layer0423', source, viz)
          //#5F4690,#1D6996,#38A6A5,#0F8554,#73AF48,#EDAD08,#E17C05,#CC503E,#94346E,#6F4070,#994E95,#666666
          layers["0423"].addTo(map);
          interactivity["0423"] =new carto.Interactivity(layers["0423"]);
@@ -175,7 +201,7 @@
          //layers[newdate].hide();
 
 
-        dayper.forEach(function(day){
+        /*dayper.forEach(function(day){
          newdate = "04" + day;
          if(parseInt(day)<14){
          //console.warn(newdate)
@@ -183,6 +209,8 @@
          @country: $iso3
          @closure_type: $type_`+newdate+`
          @note:$comment_`+newdate+`
+         @source:$source_`+newdate+`
+
          width: 4
          strokeWidth: 0.5
          strokeColor: black
@@ -194,7 +222,7 @@
          interactivity[newdate].on('featureClick', updatePopup); 
 
 
-         }});
+         }});*/
 
 
       let colorLegendList = '';
@@ -209,7 +237,7 @@
       colorLegendList +=`<li><span class="point-mark" style="background-color:${color}; border: 1px solid black;"></span><span>${legend.key}</span></li>\n`; });
       document.getElementById('content').innerHTML = colorLegendList;
     
-     monthstart.forEach(function(month){
+    /* monthstart.forEach(function(month){
         dayper.reverse().forEach(function(day){
           newdate = monthformat[month] + day;
 
@@ -219,6 +247,8 @@
          @country: $iso3
          @closure_type: $type_`+newdate+`
          @note:$comment_`+newdate+`
+         @source:$source_`+newdate+`
+
          width: 4
          strokeWidth: 0.5
          strokeColor: black
@@ -230,9 +260,12 @@
          layers[newdate].on('loaded', () => {
              layers[newdate].hide();
            });
-         }})});
+         }})});*/
       });
 
+    const s = carto.expressions;
+
+    
       
       function rgbToHex(color) {
         return "#" + ((1 << 24) + (color.r << 16) + (color.g << 8) + color.b).toString(16).slice(1);
@@ -262,6 +295,10 @@
                       <h5 class="CDB-infowindow-subtitle">Closure Type</h5>
                       <h4 class="CDB-infowindow-title">${vars.closure_type.value}</h4>
                     </li>
+                     <li class="CDB-infowindow-listItem">
+                      <h5 class="CDB-infowindow-subtitle">Source:</h5>
+                      <h4 class="CDB-infowindow-title"><a href="${vars.source.value}" > ${vars.source.value}</a></h4>
+                    </li>
                     <li class="CDB-infowindow-listItem">
                       <h5 class="CDB-infowindow-subtitle">Notes:</h5>
                       <h4 class="CDB-infowindow-title">${vars.note.value}</h4>
@@ -286,7 +323,7 @@
 
         slider.on('update', function(values,handle){
                 //dateValues[handle].innerHTML = formatDate(new Date(+values[handle]));
-                monthper.forEach(function(month){
+                /*monthper.forEach(function(month){
                   dayper.forEach(function(day){
                       hidedate = monthformat[month] + day;
                        if(typeof layers[hidedate] != "undefined"){
@@ -295,7 +332,6 @@
 
                        }
                   });});
-                showdate = pipFormats[parseInt(values[0])]
                 if(typeof layers[showdate] == "undefined"){
                   layers[showdate]= new carto.Layer('layer'+showdate, source, new carto.Viz(`
                     @country: $iso3
@@ -316,7 +352,13 @@
                 layers[showdate].show();
                 interactivity[showdate].enable(); 
 
-                }  
+                }*/
+                //interactivity["0423"].disable(); 
+                showdate = pipFormats[parseInt(values[0])]
+                //const viznew = vizFromSettings({date: showdate});
+                //layers["0423"].blendToViz(viznew,500)
+                //var blender = 'ramp(buckets($type_'+showdate+', ["Border closure", "International flights suspension", "No Policy","Visa restrictions"]),[#5F4690, #1D6996, #38A6A5, #666666,#0F8554])'
+                viz.color.blendTo('ramp(buckets(@closure_type'+pipFormats[parseInt(values[0])]+', ["Border closure", "International flights suspension", "No Policy","Visa restrictions"]),[#5F4690, #1D6996, #38A6A5, #666666,#0F8554])',10);
                 /*const colorLegend = layers[parseInt(values[0])].viz.color.getLegendData();
                   colorLegend.data.forEach((legend, index) => {
                 const color = rgbToHex(legend.value);
