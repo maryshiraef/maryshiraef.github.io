@@ -1058,7 +1058,21 @@ html:not([dir=rtl]) .noUi-horizontal .noUi-handle{right:-17px;left:auto}
         if (event.features.length > 0) {
         const vars = event.features[0].variables;
         console.warn(vars.name.value);
-      }}
+        popup.setHTML(`
+          <div class="CDB-infowindow CDB-infowindow--dark js-infowindow">
+            <div class="CDB-infowindow-close js-close"></div>
+            <div class="CDB-infowindow-container">
+              <div class="CDB-infowindow-header CDB-infowindow-headerBg CDB-infowindow-headerBg--light js-header" style="background: #35AAE5;">  
+          ${vars.name.value}
+        `);
+        popup.setLngLat([event.coordinates.lng, event.coordinates.lat]);
+          if (!popup.isOpen()) {
+            popup.addTo(map);
+          }
+      } else {
+          popup.remove();
+        }
+      }
 
     function generateLegend() {
         // Request data for legend from the layer viz
