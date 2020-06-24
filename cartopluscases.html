@@ -7,6 +7,7 @@
     <script src="https://libs.cartocdn.com/carto-vl/v1.4.4/carto-vl.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mapbox-gl/1.10.0/mapbox-gl.min.js"></script>
     <script src="https://libs.cartocdn.com/airship-components/v1.0.3/airship.js"></script>
+    <script src="countrypointsvar.json"></script>
     <style>
 .noUi-target,.noUi-target *{-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;-ms-touch-action:none;touch-action:none;-ms-user-select:none;-moz-user-select:none;user-select:none;-moz-box-sizing:border-box;box-sizing:border-box}
 .noUi-target{position:relative;direction:ltr}
@@ -895,8 +896,8 @@ html:not([dir=rtl]) .noUi-horizontal .noUi-handle{right:-17px;left:auto}
     const s = carto.expressions;
     const map = new mapboxgl.Map({
       container: 'map',
-      //style: carto.basemaps.darkmatter ,
-      style: '/mapstyle.json',
+      style: carto.basemaps.darkmatter ,
+      //style: '/mapstyle.json',
       center: [0, 30],
       pitchWithRotate : false,
       dragRotate: false,
@@ -1036,14 +1037,11 @@ html:not([dir=rtl]) .noUi-horizontal .noUi-handle{right:-17px;left:auto}
       setupWidget();
     });
     var viz2 = new carto.Viz();
-    fetch('/countrypoints.json')
-      .then(response => response.json())
-      .then(function(data){
           // Define layer
-          const source2 = new carto.source.GeoJSON(data);
+          const source2 = new carto.source.GeoJSON(countrypointdata);
           viz2 = new carto.Viz(`
             width: 10
-            @name: $sovereignt
+            @name: $admin
             `
             );
           const layer2 = new carto.Layer('cases', source2, viz2);
@@ -1051,8 +1049,6 @@ html:not([dir=rtl]) .noUi-horizontal .noUi-handle{right:-17px;left:auto}
           interactivity2.on('featureClick', dotname);   
 
           layer2.addTo(map);
-      });
-
 
     function dotname(event){
         if (event.features.length > 0) {
